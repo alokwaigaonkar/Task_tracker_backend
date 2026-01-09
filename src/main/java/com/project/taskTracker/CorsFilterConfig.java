@@ -18,7 +18,8 @@ public class CorsFilterConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(
-                List.of("http://localhost:3000")
+                List.of("http://localhost:3000",
+                        "https://task-tracker-frontend-alpha-tan.vercel.app/")
         );
 
         config.setAllowedMethods(
