@@ -103,8 +103,43 @@ public class StudyDayService {
 
     public StudyDayDetailDto createOrLoadDay(LocalDate date) {
 
-        StudyDay day = studyDayRepo.findByDate(date)
-                .orElseGet(() -> studyDayRepo.save(new StudyDay(date)));
+        StudyDay day = studyDayRepo.findByDate(date).orElseGet(() -> {
+
+            StudyDay newDay = new StudyDay(date);
+
+            // Find yesterday
+            LocalDate yesterday = date.minusDays(1);
+
+            studyDayRepo.findByDate(yesterday).ifPresent(prevDay -> {
+
+                for (DailyGoal prevGoal : prevDay.getDailyGoals()) {
+
+                    // Copy goal
+                    DailyGoal newGoal = new DailyGoal(
+                            prevGoal.getTitle(),
+                            prevGoal.getTargetMinutes()
+                    );
+
+                    // Copy ALL tasks but reset completion
+                    for (Task prevTask : prevGoal.getTasks()) {
+
+                        Task newTask = new Task(
+                                prevTask.getTitle(),
+                                prevTask.getEstimatedMinutes()
+                        );
+
+                        // IMPORTANT: do NOT copy completed state
+                        // newTask.completed defaults to false
+
+                        newGoal.addTask(newTask);
+                    }
+
+                    newDay.addGoal(newGoal);
+                }
+            });
+
+            return studyDayRepo.save(newDay);
+        });
 
         return getDayDetail(day.getDate());
     }
